@@ -437,3 +437,14 @@ var MAX_SNAP = .1;
 
 // Run the code.
 addHtml();
+
+// Known issues:
+// - Browser find in page feature completely broken.
+// - Mobile display somewhat broken, needs to be zoomed out for rows
+//   to be positioned correctly.
+// - When window is very narrow, horizontal scrollbar covers up bottom of the
+//   page. Can fix this by using documentElement.clientHeight as the viewport
+//   height, but this really messes up mobile.
+// - Scrolling via text selection broken in firefox when mouse scrolling toggled
+//   off. Works in chrome.
+// - Firefox on mobile completely broken and doesn't load at all.
