@@ -18,13 +18,18 @@ function addHtml() {
   var shadow = $("<div>").addClass("shadow").appendTo(body);
   var innerEllipse = $("<div>").addClass("innerEllipse").appendTo(container);
   var outerEllipse = $("<div>").addClass("outerEllipse").appendTo(container);
+  var mouse =
+      $("<div>")
+          .addClass("mouse")
+          .append($("<span>").addClass("mouse-char").append("&#x1f42d;"))
+          .appendTo(body);
 
   var rows = [];
   addHtmlData(null, data, enums, container, rows);
 
   // Dance, monkey!
   new Animation(container[0], shadow[0], innerEllipse[0], outerEllipse[0],
-                rows);
+                mouse[0], rows);
 }
 
 // Add (key, value) data to parent HTML element where value can be a primitive
@@ -110,20 +115,22 @@ function addHtmlValues(key, values, enums, parent, rows, depth, section) {
 
 // Animation class responsible for opening transition when the page loads, and
 // for scrolling page in response to mouse events.
-function Animation(container, shadow, innerEllipse, outerEllipse, rows) {
+function Animation(container, shadow, innerEllipse, outerEllipse, mouse, rows) {
   this.container = container; // Container div.
   this.shadow = shadow;       // Space filler when container set position:fixed.
   this.innerEllipse = innerEllipse; // Inner ellipse div.
-  this.outerEllipse = outerEllipse; // Outer ellispse div.
+  this.outerEllipse = outerEllipse; // Outer ellipse div.
+  this.mouse = mouse;               // Mouse toggle div.
   this.rows = rows;                 // Array of Row objects.
-  this.animating = false; // Whether requestAnimationFrame call is pending.
-  this.prevScroll = null; // Vertical scroll position at last frame (pixels).
-  this.prevMouse = null;  // Vertical mouse position at last frame (pixels).
-  this.prevTime = null;   // Timestamp at last frame (ms).
-  this.startTime = null;  // Timestamp at first frame (ms).
-  this.prevRow = null;    // Highlighted row object at last frame.
-  this.curMouse = null;   // Current vertical mouse position (pixels).
-  this.mouseTime = null;  // Timestamp mouse position last changed (ms).
+  this.animating = false;  // Whether requestAnimationFrame call is pending.
+  this.prevScroll = null;  // Vertical scroll position at last frame (pixels).
+  this.prevMouse = null;   // Vertical mouse position at last frame (pixels).
+  this.prevTime = null;    // Timestamp at last frame (ms).
+  this.startTime = null;   // Timestamp at first frame (ms).
+  this.prevRow = null;     // Highlighted row object at last frame.
+  this.curMouse = null;    // Current vertical mouse position (pixels).
+  this.mouseTime = null;   // Timestamp mouse position last changed (ms).
+  this.mouseScroll = true; // Whether to enable mouse scrolling (bool).
   this.spring = new DampedSpring; // Scroll animation spring state.
   this.onframeCallback = this.onframe.bind(this); // Frame callback.
   this.cachedViewWidth = null;                    // Cached view width.
@@ -136,6 +143,7 @@ function Animation(container, shadow, innerEllipse, outerEllipse, rows) {
   document.addEventListener("mouseleave", this.onmouse.bind(this), true);
   document.addEventListener("scroll", this.onscroll.bind(this), true);
   window.addEventListener("resize", this.onresize.bind(this), true);
+  this.mouse.addEventListener("click", this.onmouseToggle.bind(this), true);
   this.requestFrame();
 }
 
@@ -169,6 +177,15 @@ Animation.prototype.onmouse = function(event) {
   this.requestFrame();
 };
 
+Animation.prototype.onmouseToggle = function(event) {
+  this.mouseScroll = !this.mouseScroll;
+  if (this.mouseScroll) {
+    this.mouse.classList.remove("disabled");
+  } else {
+    this.mouse.classList.add("disabled");
+  }
+};
+
 Animation.prototype.onscroll = function(event) { this.requestFrame(); };
 
 Animation.prototype.onresize = function(event) {
@@ -185,7 +202,8 @@ Animation.prototype.onframe = function(timestamp) {
   var docHeight = document.documentElement.scrollHeight;
   var maxScroll = docHeight - viewHeight;
   var curScroll = window.scrollY;
-  var newScroll = this.curMouse / viewHeight * maxScroll;
+  var newScroll =
+      this.mouseScroll ? this.curMouse / viewHeight * maxScroll : null;
 
   // Update spring displacement if mouse moved since the last frame.
   if (this.curMouse !== this.prevMouse) {
@@ -269,6 +287,10 @@ Animation.prototype.onframe = function(timestamp) {
     [].forEach.call(document.querySelectorAll(".separator"),
                     function(elem) { elem.classList.add("reveal"); });
   }
+
+  // Reveal mouse scroll toggle if there was a mouse event.
+  if (this.mouseTime !== null)
+    this.mouse.style.visibility = "visible";
 
   // Update scroll position if it is changing.
   if (newScroll !== null && curScroll != newScroll)

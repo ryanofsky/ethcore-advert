@@ -123,6 +123,28 @@
     color: #333;
   }
 
+  .mouse {
+    position: fixed;
+    visibility: hidden;
+    cursor: pointer;
+    font-size: x-large;
+    bottom: 0px;
+    right: 0px;
+  }
+
+  .mouse.disabled {
+    color: red;
+    text-decoration: line-through;
+  }
+
+  .mouse-char {
+    color: #444;
+  }
+
+  .mouse-char:hover {
+    color: #ddd;
+  }
+
   @media (max-width: 40em) {
     .disabled {
       display:none;
